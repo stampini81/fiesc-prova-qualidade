@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tarefas - Prova FIESC</title>
+    <style>
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            color: #1e2a38;
+            text-align: center;
+        }
+        .form-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #task-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #add-task-btn {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #add-task-btn:hover {
+            background-color: #0056b3;
+        }
+        #task-list {
+            list-style: none;
+            padding: 0;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        .task-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+        }
+        .task-item span {
+            flex-grow: 1;
+        }
+        .task-item.completed span {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 1.2rem;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .task-item:hover .delete-btn {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Minha Lista de Tarefas</h1>
+        <div class="form-container">
+            <input type="text" id="task-input" placeholder="Digite uma nova tarefa...">
+            <button id="add-task-btn">Adicionar</button>
+        </div>
+        <ul id="task-list">
+            </ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const apiUrl = 'http://localhost:3000/tarefas';
+            const taskList = document.getElementById('task-list');
+            const taskInput = document.getElementById('task-input');
+            const addTaskBtn = document.getElementById('add-task-btn');
+
+            // Função 1: Buscar tarefas da API e renderizar na tela
+            async function fetchTasks() {
+                try {
+                    const response = await fetch(apiUrl);
+                    const tasks = await response.json();
+
+                    taskList.innerHTML = ''; // Limpa a lista antes de adicionar os novos itens
+
+                    tasks.forEach(task => {
+                        const li = document.createElement('li');
+                        li.className = 'task-item';
+                        li.dataset.id = task.id; // Armazena o ID da tarefa no elemento
+                        if (task.concluida) {
+                            li.classList.add('completed');
+                        }
+
+                        // Checkbox para concluir a tarefa
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.checked = task.concluida;
+                        checkbox.addEventListener('change', () => toggleTaskCompletion(task.id, checkbox.checked));
+
+                        // Texto da tarefa
+                        const span = document.createElement('span');
+                        span.textContent = task.descricao;
+
+                        // Botão de deletar
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.innerHTML = '&times;'; // 'x' para deletar
+                        deleteBtn.addEventListener('click', () => deleteTask(task.id));
+
+                        li.appendChild(checkbox);
+                        li.appendChild(span);
+                        li.appendChild(deleteBtn);
+                        taskList.appendChild(li);
+                    });
+                } catch (error) {
+                    console.error('Erro ao buscar tarefas:', error);
+                }
+            }
+
+            // Função 2: Adicionar uma nova tarefa
+            async function addTask() {
+                const description = taskInput.value;
+                if (!description) {
+                    alert('Por favor, digite a descrição da tarefa.');
+                    return;
+                }
+
+                try {
+                    await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ descricao: description }),
+                    });
+                    taskInput.value = ''; // Limpa o campo de input
+                    fetchTasks(); // Recarrega a lista de tarefas
+                } catch (error) {
+                    console.error('Erro ao adicionar tarefa:', error);
+                }
+            }
+
+            // Função 3: Marcar/Desmarcar tarefa como concluída
+            async function toggleTaskCompletion(id, isCompleted) {
+                try {
+                    await fetch(`${apiUrl}/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ concluida: isCompleted }),
+                    });
+                    fetchTasks(); // Recarrega a lista para mostrar a mudança visual
+                } catch (error) {
+                    console.error('Erro ao atualizar tarefa:', error);
+                }
+            }
+
+            // Função 4: Deletar uma tarefa
+            async function deleteTask(id) {
+                if (!confirm('Tem certeza que deseja deletar esta tarefa?')) {
+                    return;
+                }
+
+                try {
+                    await fetch(`${apiUrl}/${id}`, {
+                        method: 'DELETE',
+                    });
+                    fetchTasks(); // Recarrega a lista
+                } catch (error) {
+                    console.error('Erro ao deletar tarefa:', error);
+                }
+            }
+
+            // Adiciona os "escutadores de eventos" aos elementos
+            addTaskBtn.addEventListener('click', addTask);
+            taskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addTask();
+                }
+            });
+
+            // Carrega as tarefas assim que a página é aberta
+            fetchTasks();
+        });
+    </script>
+</body>
+</html>

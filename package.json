@@ -1,0 +1,29 @@
+{
+  "name": "fiesc-prova-qualidade",
+  "version": "1.0.0",
+  "description": "Projeto de avaliação prática para a vaga de Analista de Qualidade JR na FIESC.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stampini81/fiesc-prova-qualidade.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/stampini81/fiesc-prova-qualidade/issues"
+  },
+  "homepage": "https://github.com/stampini81/fiesc-prova-qualidade#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "cypress": "^14.5.3"
+  }
+}
